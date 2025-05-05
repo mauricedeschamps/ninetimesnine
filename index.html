@@ -21,7 +21,7 @@
             font-size: 48px;
             margin: 10px 0;
             font-weight: bold;
-            color: #1a73e8; /* Blue color */
+            color: #1a73e8;
         }
         .language-switcher {
             display: flex;
@@ -37,7 +37,7 @@
             cursor: pointer;
         }
         .language-btn.active {
-            background: #1a73e8; /* Blue color */
+            background: #1a73e8;
             color: white;
         }
         .grid-container {
@@ -59,7 +59,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #1a73e8; /* Blue color */
+            color: #1a73e8;
         }
         .grid-btn:hover {
             transform: translateY(-3px);
@@ -82,7 +82,7 @@
             cursor: pointer;
         }
         .continue-btn {
-            background-color: #1a73e8; /* Blue color */
+            background-color: #1a73e8;
             color: white;
         }
         .screen {
@@ -96,7 +96,7 @@
         .current-table {
             font-size: 24px;
             margin: 10px 0;
-            color: #1a73e8; /* Blue color */
+            color: #1a73e8;
         }
         footer {
             margin-top: auto;
@@ -105,7 +105,7 @@
             color: #666;
         }
         .email-link {
-            color: #1a73e8; /* Blue color */
+            color: #1a73e8;
             text-decoration: none;
         }
         .sound-btn {
@@ -115,7 +115,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background-color: #1a73e8; /* Blue color */
+            background-color: #1a73e8;
             color: white;
             border: none;
             font-size: 20px;
@@ -124,6 +124,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .table-number {
+            font-size: 32px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -138,9 +142,9 @@
     <!-- 段選択画面 -->
     <div class="screen active" id="menu-screen">
         <div class="logo">9×9</div>
-        <div class="current-table" id="menu-title">Select a table</div>
+        <div class="current-table" id="menu-title">Select a number (1-9)</div>
         <div class="grid-container" id="table-grid">
-            <!-- 1-9の段ボタンがここに生成されます -->
+            <!-- 1-9の数字ボタンがここに生成されます -->
         </div>
     </div>
 
@@ -182,22 +186,25 @@
             // 多言語対応テキスト
             const translations = {
                 en: {
-                    menuTitle: "Select a table (1-9)",
+                    menuTitle: "Select a number (1-9)",
                     back: "Back",
                     continue: "Continue",
-                    contact: "Contact us"
+                    contact: "Contact us",
+                    tableTitle: "Times Table"
                 },
                 zh: {
-                    menuTitle: "选择乘法表 (1-9)",
+                    menuTitle: "选择数字 (1-9)",
                     back: "返回",
                     continue: "继续",
-                    contact: "联系我们"
+                    contact: "联系我们",
+                    tableTitle: "的乘法表"
                 },
                 ja: {
-                    menuTitle: "段を選んでください (1-9)",
+                    menuTitle: "数字を選んでください (1-9)",
                     back: "戻る",
                     continue: "続ける",
-                    contact: "お問い合わせ"
+                    contact: "お問い合わせ",
+                    tableTitle: "の段"
                 }
             };
 
@@ -323,14 +330,20 @@
                 contactText.textContent = translations[currentLang].contact;
             }
 
-            // 段選択ボタン生成 (1-9の段)
+            // 数字選択ボタン生成 (1-9)
             function generateTableButtons() {
                 tableGrid.innerHTML = '';
                 
                 for (let i = 1; i <= 9; i++) {
                     const btn = document.createElement('button');
                     btn.className = 'grid-btn';
-                    btn.textContent = `${i}×${i}`;
+                    
+                    // 数字だけを大きく表示
+                    const numberSpan = document.createElement('span');
+                    numberSpan.className = 'table-number';
+                    numberSpan.textContent = i;
+                    
+                    btn.appendChild(numberSpan);
                     btn.dataset.table = i;
                     btn.addEventListener('click', function() {
                         const table = parseInt(this.dataset.table);
@@ -343,16 +356,7 @@
 
             // 問題選択画面を表示
             function showProblemScreen(table) {
-                let tableText = '';
-                if (currentLang === 'ja') {
-                    tableText = `${table}の段`;
-                } else if (currentLang === 'zh') {
-                    tableText = `${table}的乘法表`;
-                } else {
-                    tableText = `${table} Times Table`;
-                }
-                
-                currentTableDisplay.textContent = tableText;
+                currentTableDisplay.textContent = `${table}${translations[currentLang].tableTitle}`;
                 problemGrid.innerHTML = '';
                 
                 // 問題ボタン生成 (×1から×9)
@@ -376,16 +380,7 @@
             
             // 答え表示画面を表示
             function showAnswerScreen(table, multiplier) {
-                let tableText = '';
-                if (currentLang === 'ja') {
-                    tableText = `${table}の段`;
-                } else if (currentLang === 'zh') {
-                    tableText = `${table}的乘法表`;
-                } else {
-                    tableText = `${table} Times Table`;
-                }
-                
-                answerTableDisplay.textContent = tableText;
+                answerTableDisplay.textContent = `${table}${translations[currentLang].tableTitle}`;
                 questionDisplay.textContent = `${table} × ${multiplier} = ?`;
                 correctAnswer.textContent = table * multiplier;
                 
