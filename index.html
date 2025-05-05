@@ -21,6 +21,7 @@
             font-size: 48px;
             margin: 10px 0;
             font-weight: bold;
+            color: #1a73e8; /* Blue color */
         }
         .language-switcher {
             display: flex;
@@ -36,7 +37,7 @@
             cursor: pointer;
         }
         .language-btn.active {
-            background: #4CAF50;
+            background: #1a73e8; /* Blue color */
             color: white;
         }
         .grid-container {
@@ -58,6 +59,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #1a73e8; /* Blue color */
         }
         .grid-btn:hover {
             transform: translateY(-3px);
@@ -66,14 +68,22 @@
         .grid-btn:active {
             transform: translateY(0);
         }
-        .back-btn {
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .nav-btn {
             padding: 10px 20px;
             font-size: 18px;
             border: none;
             border-radius: 10px;
             background-color: #f0f0f0;
             cursor: pointer;
-            margin: 20px 0;
+        }
+        .continue-btn {
+            background-color: #1a73e8; /* Blue color */
+            color: white;
         }
         .screen {
             display: none;
@@ -86,6 +96,7 @@
         .current-table {
             font-size: 24px;
             margin: 10px 0;
+            color: #1a73e8; /* Blue color */
         }
         footer {
             margin-top: auto;
@@ -94,7 +105,7 @@
             color: #666;
         }
         .email-link {
-            color: #4CAF50;
+            color: #1a73e8; /* Blue color */
             text-decoration: none;
         }
         .sound-btn {
@@ -104,7 +115,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background-color: #4CAF50;
+            background-color: #1a73e8; /* Blue color */
             color: white;
             border: none;
             font-size: 20px;
@@ -140,16 +151,22 @@
         <div class="grid-container" id="problem-grid">
             <!-- 問題ボタンがここに生成されます -->
         </div>
-        <button class="back-btn" id="back-to-menu">←</button>
+        <div class="nav-buttons">
+            <button class="nav-btn" id="back-to-menu">← Back</button>
+            <div></div> <!-- Spacer -->
+        </div>
     </div>
 
     <!-- 答え表示画面 -->
     <div class="screen" id="answer-screen">
         <div class="logo">9×9</div>
         <div class="current-table" id="answer-table-display"></div>
-        <div style="font-size: 48px; margin: 30px 0;" id="question-display"></div>
-        <div style="font-size: 72px; color: #4CAF50; margin-bottom: 30px;" id="correct-answer"></div>
-        <button class="back-btn" id="back-to-problem">←</button>
+        <div style="font-size: 48px; margin: 30px 0; color: #1a73e8;" id="question-display"></div>
+        <div style="font-size: 72px; color: #1a73e8; margin-bottom: 30px;" id="correct-answer"></div>
+        <div class="nav-buttons">
+            <button class="nav-btn" id="back-to-problem">← Back</button>
+            <button class="nav-btn continue-btn" id="continue-btn">Continue →</button>
+        </div>
     </div>
 
     <!-- 音声ボタン -->
@@ -165,18 +182,21 @@
             // 多言語対応テキスト
             const translations = {
                 en: {
-                    menuTitle: "Select a table",
+                    menuTitle: "Select a table (1-9)",
                     back: "Back",
+                    continue: "Continue",
                     contact: "Contact us"
                 },
                 zh: {
-                    menuTitle: "选择乘法表",
+                    menuTitle: "选择乘法表 (1-9)",
                     back: "返回",
+                    continue: "继续",
                     contact: "联系我们"
                 },
                 ja: {
-                    menuTitle: "段を選んでください",
+                    menuTitle: "段を選んでください (1-9)",
                     back: "戻る",
+                    continue: "続ける",
                     contact: "お問い合わせ"
                 }
             };
@@ -190,6 +210,10 @@
 
             // 現在の言語 (デフォルトは英語)
             let currentLang = 'en';
+            
+            // 現在の問題情報
+            let currentTable = 1;
+            let currentMultiplier = 1;
             
             // 音声合成設定
             const synth = window.speechSynthesis;
@@ -232,6 +256,19 @@
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.voice = voice;
                     utterance.rate = 0.9;
+                    
+                    // 言語ごとに発音を調整
+                    if (currentLang === 'en') {
+                        utterance.lang = 'en-US';
+                        utterance.text = text.replace(/×/g, ' times ').replace(/=/g, ' is ');
+                    } else if (currentLang === 'zh') {
+                        utterance.lang = 'zh-CN';
+                        utterance.text = text.replace(/×/g, ' 乘以 ').replace(/=/g, ' 等于 ');
+                    } else if (currentLang === 'ja') {
+                        utterance.lang = 'ja-JP';
+                        utterance.text = text.replace(/×/g, ' かける ').replace(/=/g, ' は ');
+                    }
+                    
                     synth.speak(utterance);
                 }
             }
@@ -248,6 +285,7 @@
             const correctAnswer = document.getElementById('correct-answer');
             const backToMenuBtn = document.getElementById('back-to-menu');
             const backToProblemBtn = document.getElementById('back-to-problem');
+            const continueBtn = document.getElementById('continue-btn');
             const menuTitle = document.getElementById('menu-title');
             const contactText = document.getElementById('contact-text');
             const soundBtn = document.getElementById('sound-btn');
@@ -269,8 +307,9 @@
                     if (menuScreen.classList.contains('active')) {
                         generateTableButtons();
                     } else if (problemScreen.classList.contains('active')) {
-                        const table = parseInt(currentTableDisplay.textContent.split('×')[0].trim());
-                        showProblemScreen(table);
+                        showProblemScreen(currentTable);
+                    } else if (answerScreen.classList.contains('active')) {
+                        showAnswerScreen(currentTable, currentMultiplier);
                     }
                 });
             });
@@ -280,6 +319,7 @@
                 menuTitle.textContent = translations[currentLang].menuTitle;
                 backToMenuBtn.textContent = translations[currentLang].back;
                 backToProblemBtn.textContent = translations[currentLang].back;
+                continueBtn.textContent = translations[currentLang].continue;
                 contactText.textContent = translations[currentLang].contact;
             }
 
@@ -294,6 +334,7 @@
                     btn.dataset.table = i;
                     btn.addEventListener('click', function() {
                         const table = parseInt(this.dataset.table);
+                        currentTable = table;
                         showProblemScreen(table);
                     });
                     tableGrid.appendChild(btn);
@@ -304,11 +345,11 @@
             function showProblemScreen(table) {
                 let tableText = '';
                 if (currentLang === 'ja') {
-                    tableText = `${numberTexts.ja[table]}の段 (${table}×${table})`;
+                    tableText = `${table}の段`;
                 } else if (currentLang === 'zh') {
-                    tableText = `${numberTexts.zh[table]}的乘法表 (${table}×${table})`;
+                    tableText = `${table}的乘法表`;
                 } else {
-                    tableText = `${numberTexts.en[table]} Times Table (${table}×${table})`;
+                    tableText = `${table} Times Table`;
                 }
                 
                 currentTableDisplay.textContent = tableText;
@@ -322,6 +363,7 @@
                     btn.dataset.multiplier = i;
                     btn.addEventListener('click', function() {
                         const multiplier = parseInt(this.dataset.multiplier);
+                        currentMultiplier = multiplier;
                         showAnswerScreen(table, multiplier);
                     });
                     problemGrid.appendChild(btn);
@@ -336,11 +378,11 @@
             function showAnswerScreen(table, multiplier) {
                 let tableText = '';
                 if (currentLang === 'ja') {
-                    tableText = `${numberTexts.ja[table]}の段`;
+                    tableText = `${table}の段`;
                 } else if (currentLang === 'zh') {
-                    tableText = `${numberTexts.zh[table]}的乘法表`;
+                    tableText = `${table}的乘法表`;
                 } else {
-                    tableText = `${numberTexts.en[table]} Times Table`;
+                    tableText = `${table} Times Table`;
                 }
                 
                 answerTableDisplay.textContent = tableText;
@@ -348,13 +390,7 @@
                 correctAnswer.textContent = table * multiplier;
                 
                 // 音声で問題と答えを読み上げ
-                if (currentLang === 'ja') {
-                    speak(`${table} かける ${multiplier} は ${table * multiplier}`);
-                } else if (currentLang === 'zh') {
-                    speak(`${table} 乘以 ${multiplier} 等于 ${table * multiplier}`);
-                } else {
-                    speak(`${table} times ${multiplier} is ${table * multiplier}`);
-                }
+                speak(`${table} × ${multiplier} = ${table * multiplier}`);
                 
                 problemScreen.classList.remove('active');
                 menuScreen.classList.remove('active');
@@ -369,24 +405,20 @@
             });
             
             backToProblemBtn.addEventListener('click', function() {
-                const table = parseInt(answerTableDisplay.textContent.split('×')[0]);
                 answerScreen.classList.remove('active');
                 problemScreen.classList.add('active');
+            });
+
+            // 続けるボタンのイベント
+            continueBtn.addEventListener('click', function() {
+                currentMultiplier = currentMultiplier < 9 ? currentMultiplier + 1 : 1;
+                showAnswerScreen(currentTable, currentMultiplier);
             });
 
             // 音声ボタンのイベント
             soundBtn.addEventListener('click', function() {
                 if (answerScreen.classList.contains('active')) {
-                    const table = parseInt(answerTableDisplay.textContent.split('×')[0]);
-                    const multiplier = parseInt(questionDisplay.textContent.split('×')[1].split('=')[0].trim());
-                    
-                    if (currentLang === 'ja') {
-                        speak(`${table} かける ${multiplier} は ${table * multiplier}`);
-                    } else if (currentLang === 'zh') {
-                        speak(`${table} 乘以 ${multiplier} 等于 ${table * multiplier}`);
-                    } else {
-                        speak(`${table} times ${multiplier} is ${table * multiplier}`);
-                    }
+                    speak(`${currentTable} × ${currentMultiplier} = ${currentTable * currentMultiplier}`);
                 }
             });
 
