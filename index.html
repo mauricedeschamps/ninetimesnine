@@ -16,6 +16,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            color: #0066cc; /* 文字色を青に変更 */
         }
         .logo {
             font-size: 48px;
@@ -34,9 +35,10 @@
             border-radius: 5px;
             background: white;
             cursor: pointer;
+            color: #0066cc; /* ボタン文字色も青に */
         }
         .language-btn.active {
-            background: #4CAF50;
+            background: #0066cc; /* アクティブボタンの背景色 */
             color: white;
         }
         .grid-container {
@@ -58,10 +60,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #0066cc; /* ボタン文字色を青に */
         }
         .grid-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            background-color: #e6f0ff; /* ホバー時の薄い青背景 */
         }
         .grid-btn:active {
             transform: translateY(0);
@@ -71,9 +75,10 @@
             font-size: 18px;
             border: none;
             border-radius: 10px;
-            background-color: #f0f0f0;
+            background-color: #e6f0ff; /* 薄い青背景 */
             cursor: pointer;
             margin: 20px 0;
+            color: #0066cc;
         }
         .screen {
             display: none;
@@ -91,10 +96,9 @@
             margin-top: auto;
             padding: 20px 0;
             font-size: 14px;
-            color: #666;
         }
         .email-link {
-            color: #4CAF50;
+            color: #0066cc;
             text-decoration: none;
         }
         .sound-btn {
@@ -104,7 +108,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background-color: #4CAF50;
+            background-color: #0066cc;
             color: white;
             border: none;
             font-size: 20px;
@@ -113,6 +117,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        /* 答え表示のスタイル */
+        #question-display {
+            font-size: 48px;
+            margin: 30px 0;
+        }
+        #correct-answer {
+            font-size: 72px;
+            color: #0066cc;
+            margin-bottom: 30px;
         }
     </style>
 </head>
@@ -129,7 +143,7 @@
         <div class="logo">9×9</div>
         <div class="current-table" id="menu-title">Select a table</div>
         <div class="grid-container" id="table-grid">
-            <!-- 1-9の段ボタンがここに生成されます -->
+            <!-- 1-9の数字ボタンがここに生成されます -->
         </div>
     </div>
 
@@ -147,8 +161,8 @@
     <div class="screen" id="answer-screen">
         <div class="logo">9×9</div>
         <div class="current-table" id="answer-table-display"></div>
-        <div style="font-size: 48px; margin: 30px 0;" id="question-display"></div>
-        <div style="font-size: 72px; color: #4CAF50; margin-bottom: 30px;" id="correct-answer"></div>
+        <div id="question-display"></div>
+        <div id="correct-answer"></div>
         <button class="back-btn" id="back-to-problem">←</button>
     </div>
 
@@ -167,17 +181,20 @@
                 en: {
                     menuTitle: "Select a table",
                     back: "Back",
-                    contact: "Contact us"
+                    contact: "Contact us",
+                    tableTitle: "Times Table"
                 },
                 zh: {
                     menuTitle: "选择乘法表",
                     back: "返回",
-                    contact: "联系我们"
+                    contact: "联系我们",
+                    tableTitle: "的乘法表"
                 },
                 ja: {
                     menuTitle: "段を選んでください",
                     back: "戻る",
-                    contact: "お問い合わせ"
+                    contact: "お問い合わせ",
+                    tableTitle: "の段"
                 }
             };
 
@@ -283,14 +300,14 @@
                 contactText.textContent = translations[currentLang].contact;
             }
 
-            // 段選択ボタン生成 (1-9の段)
+            // 段選択ボタン生成 (シンプルな1-9の数字)
             function generateTableButtons() {
                 tableGrid.innerHTML = '';
                 
                 for (let i = 1; i <= 9; i++) {
                     const btn = document.createElement('button');
                     btn.className = 'grid-btn';
-                    btn.textContent = `${i}×${i}`;
+                    btn.textContent = i; // シンプルに数字のみ表示
                     btn.dataset.table = i;
                     btn.addEventListener('click', function() {
                         const table = parseInt(this.dataset.table);
@@ -304,11 +321,11 @@
             function showProblemScreen(table) {
                 let tableText = '';
                 if (currentLang === 'ja') {
-                    tableText = `${numberTexts.ja[table]}の段 (${table}×${table})`;
+                    tableText = `${numberTexts.ja[table]}${translations.ja.tableTitle}`;
                 } else if (currentLang === 'zh') {
-                    tableText = `${numberTexts.zh[table]}的乘法表 (${table}×${table})`;
+                    tableText = `${numberTexts.zh[table]}${translations.zh.tableTitle}`;
                 } else {
-                    tableText = `${numberTexts.en[table]} Times Table (${table}×${table})`;
+                    tableText = `${numberTexts.en[table]} ${translations.en.tableTitle}`;
                 }
                 
                 currentTableDisplay.textContent = tableText;
@@ -318,7 +335,7 @@
                 for (let i = 1; i <= 9; i++) {
                     const btn = document.createElement('button');
                     btn.className = 'grid-btn';
-                    btn.textContent = `${table}×${i}`;
+                    btn.textContent = `${table}×${i}`; // 問題形式で表示
                     btn.dataset.multiplier = i;
                     btn.addEventListener('click', function() {
                         const multiplier = parseInt(this.dataset.multiplier);
@@ -336,11 +353,11 @@
             function showAnswerScreen(table, multiplier) {
                 let tableText = '';
                 if (currentLang === 'ja') {
-                    tableText = `${numberTexts.ja[table]}の段`;
+                    tableText = `${numberTexts.ja[table]}${translations.ja.tableTitle}`;
                 } else if (currentLang === 'zh') {
-                    tableText = `${numberTexts.zh[table]}的乘法表`;
+                    tableText = `${numberTexts.zh[table]}${translations.zh.tableTitle}`;
                 } else {
-                    tableText = `${numberTexts.en[table]} Times Table`;
+                    tableText = `${numberTexts.en[table]} ${translations.en.tableTitle}`;
                 }
                 
                 answerTableDisplay.textContent = tableText;
