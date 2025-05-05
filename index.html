@@ -16,7 +16,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            color: #0066cc;
+            color: #0066cc; /* 文字色を青に変更 */
         }
         .logo {
             font-size: 48px;
@@ -35,10 +35,10 @@
             border-radius: 5px;
             background: white;
             cursor: pointer;
-            color: #0066cc;
+            color: #0066cc; /* ボタン文字色も青に */
         }
         .language-btn.active {
-            background: #0066cc;
+            background: #0066cc; /* アクティブボタンの背景色 */
             color: white;
         }
         .grid-container {
@@ -60,12 +60,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #0066cc;
+            color: #0066cc; /* ボタン文字色を青に */
         }
         .grid-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            background-color: #e6f0ff;
+            background-color: #e6f0ff; /* ホバー時の薄い青背景 */
         }
         .grid-btn:active {
             transform: translateY(0);
@@ -75,7 +75,7 @@
             font-size: 18px;
             border: none;
             border-radius: 10px;
-            background-color: #e6f0ff;
+            background-color: #e6f0ff; /* 薄い青背景 */
             cursor: pointer;
             margin: 20px 0;
             color: #0066cc;
@@ -118,6 +118,7 @@
             align-items: center;
             justify-content: center;
         }
+        /* 答え表示のスタイル */
         #question-display {
             font-size: 48px;
             margin: 30px 0;
@@ -187,7 +188,7 @@
                     menuTitle: "选择乘法表",
                     back: "返回",
                     contact: "联系我们",
-                    tableTitle: "乘法表"
+                    tableTitle: "的乘法表"
                 },
                 ja: {
                     menuTitle: "段を選んでください",
@@ -197,9 +198,9 @@
                 }
             };
 
-            // 数字の多言語表現（中国語を修正）
+            // 数字の多言語表現
             const numberTexts = {
-                en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
+                en: ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"],
                 zh: ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"],
                 ja: ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
             };
@@ -212,68 +213,33 @@
             let voices = [];
             let voice = null;
 
-            // 音声の準備（より適切な音声を選択するように改良）
+            // 音声の準備
             function loadVoices() {
-                return new Promise(resolve => {
-                    voices = synth.getVoices();
-                    if (voices.length > 0) {
-                        resolve();
-                        return;
-                    }
-                    
-                    synth.onvoiceschanged = () => {
-                        voices = synth.getVoices();
-                        resolve();
-                    };
-                });
-            }
-
-            // 最適な音声を選択
-            function selectVoice() {
-                // 英語の優先順位
-                const enPriority = [
-                    'en-US', 'en-GB', 'en-AU', 'en-CA', 'en-IN',
-                    'en-US-Standard-A', 'en-US-Standard-B', 'en-US-Standard-C', 'en-US-Standard-D'
-                ];
-                
-                // 中国語の優先順位
-                const zhPriority = [
-                    'zh-CN', 'zh-TW', 'zh-HK', 
-                    'cmn-CN-Standard-A', 'cmn-CN-Standard-B', 'cmn-CN-Standard-C',
-                    'cmn-TW-Standard-A', 'cmn-TW-Standard-B', 'cmn-TW-Standard-C'
-                ];
-                
-                // 日本語の優先順位
-                const jaPriority = [
-                    'ja-JP', 'ja-JP-Standard-A', 'ja-JP-Standard-B', 'ja-JP-Standard-C'
-                ];
-                
-                let priorityList = [];
-                
+                voices = synth.getVoices();
+                // 言語に合った音声を選択
                 if (currentLang === 'ja') {
-                    priorityList = jaPriority;
+                    voice = voices.find(v => v.lang === 'ja-JP');
                 } else if (currentLang === 'zh') {
-                    priorityList = zhPriority;
+                    voice = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh-TW');
                 } else {
-                    priorityList = enPriority;
-                }
-                
-                // 優先順位に従って音声を探す
-                for (const lang of priorityList) {
-                    const foundVoice = voices.find(v => v.lang === lang || v.voiceURI.includes(lang));
-                    if (foundVoice) {
-                        voice = foundVoice;
-                        return;
-                    }
+                    voice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB');
                 }
                 
                 // 適切な音声が見つからない場合は最初の音声を使用
-                if (voices.length > 0) {
+                if (!voice && voices.length > 0) {
                     voice = voices[0];
                 }
             }
 
-            // テキストを音声で読み上げる（言語ごとに最適な表現を使用）
+            // 音声が利用可能になったらロード
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = loadVoices;
+            }
+
+            // 初期ロード
+            loadVoices();
+
+            // テキストを音声で読み上げる
             function speak(text) {
                 if (synth.speaking) {
                     synth.cancel();
@@ -283,18 +249,6 @@
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.voice = voice;
                     utterance.rate = 0.9;
-                    utterance.pitch = 1.0;
-                    
-                    // 言語ごとの調整
-                    if (currentLang === 'en') {
-                        utterance.rate = 0.95; // 英語は少しゆっくり
-                        utterance.text = text.replace(/times/g, "multiplied by").replace(/is/g, "equals");
-                    } else if (currentLang === 'zh') {
-                        utterance.rate = 1.0; // 中国語は標準速度
-                    } else {
-                        utterance.rate = 1.0; // 日本語は標準速度
-                    }
-                    
                     synth.speak(utterance);
                 }
             }
@@ -318,16 +272,12 @@
 
             // 言語切り替え
             languageBtns.forEach(btn => {
-                btn.addEventListener('click', async function() {
+                btn.addEventListener('click', function() {
                     currentLang = this.dataset.lang;
                     
                     // ボタンのactive状態を更新
                     languageBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    
-                    // 音声を再選択
-                    await loadVoices();
-                    selectVoice();
                     
                     // UIテキストを更新
                     updateUITexts();
@@ -414,46 +364,18 @@
                 questionDisplay.textContent = `${table} × ${multiplier} = ?`;
                 correctAnswer.textContent = table * multiplier;
                 
-                // 音声で問題と答えを読み上げ（言語ごとに最適な表現を使用）
+                // 音声で問題と答えを読み上げ
                 if (currentLang === 'ja') {
                     speak(`${table} かける ${multiplier} は ${table * multiplier}`);
                 } else if (currentLang === 'zh') {
-                    // 中国語の正しい乗算表現 (例: 3 × 4 = 12 → "三 乘以 四 等于 十二")
-                    const chineseAnswer = convertToChineseNumber(table * multiplier);
-                    speak(`${numberTexts.zh[table]} 乘以 ${numberTexts.zh[multiplier]} 等于 ${chineseAnswer}`);
+                    speak(`${table} 乘以 ${multiplier} 等于 ${table * multiplier}`);
                 } else {
-                    // 英語のより自然な表現 ("times" → "multiplied by", "is" → "equals")
-                    speak(`${table} multiplied by ${multiplier} equals ${table * multiplier}`);
+                    speak(`${table} times ${multiplier} is ${table * multiplier}`);
                 }
                 
                 problemScreen.classList.remove('active');
                 menuScreen.classList.remove('active');
                 answerScreen.classList.add('active');
-            }
-            
-            // 数字を中国語の読み方に変換（10以上の数値対応）
-            function convertToChineseNumber(num) {
-                if (num < 10) return numberTexts.zh[num];
-                
-                const units = ['', '十', '百', '千'];
-                let result = '';
-                let digit = 0;
-                
-                while (num > 0) {
-                    const current = num % 10;
-                    if (current !== 0) {
-                        // 10は「十」、20は「二十」と表現
-                        if (digit === 1 && current === 1 && num < 100) {
-                            result = units[digit] + result;
-                        } else {
-                            result = numberTexts.zh[current] + units[digit] + result;
-                        }
-                    }
-                    num = Math.floor(num / 10);
-                    digit++;
-                }
-                
-                return result;
             }
             
             // 戻るボタンのイベント
@@ -478,21 +400,16 @@
                     if (currentLang === 'ja') {
                         speak(`${table} かける ${multiplier} は ${table * multiplier}`);
                     } else if (currentLang === 'zh') {
-                        const chineseAnswer = convertToChineseNumber(table * multiplier);
-                        speak(`${numberTexts.zh[table]} 乘以 ${numberTexts.zh[multiplier]} 等于 ${chineseAnswer}`);
+                        speak(`${table} 乘以 ${multiplier} 等于 ${table * multiplier}`);
                     } else {
-                        speak(`${table} multiplied by ${multiplier} equals ${table * multiplier}`);
+                        speak(`${table} times ${multiplier} is ${table * multiplier}`);
                     }
                 }
             });
 
             // 初期化
-            (async function() {
-                await loadVoices();
-                selectVoice();
-                generateTableButtons();
-                updateUITexts();
-            })();
+            generateTableButtons();
+            updateUITexts();
         });
     </script>
 </body>
